@@ -6,8 +6,9 @@ import { Link } from 'react-router-dom';
 
 const PostList = ({ user, onLogout }) => {
     const [posts, setPosts] = useState([]);
-    const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
-    const [showComments, setShowComments] = useState({}); // State to manage comment visibility per post
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [showComments, setShowComments] = useState({});
+    const [searchQuery, setSearchQuery] = useState(''); // State to manage search query
 
     const fetchPosts = async () => {
         const response = await fetch('http://localhost/discuss/api.php?action=getPosts');
@@ -23,7 +24,7 @@ const PostList = ({ user, onLogout }) => {
     const toggleComments = (postId) => {
         setShowComments(prevState => ({
             ...prevState,
-            [postId]: !prevState[postId] // Toggle visibility for the selected post's comments
+            [postId]: !prevState[postId]
         }));
     };
 
@@ -57,6 +58,16 @@ const PostList = ({ user, onLogout }) => {
         }
     };
 
+    const handleSearch = (e) => {
+        setSearchQuery(e.target.value);
+    };
+
+    // Filter posts based on the search query (checks title and content)
+    const filteredPosts = posts.filter(post =>
+        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.content.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <div key={user} className=''>
             <div className='bg-[#2e2e2e] p-4 h-[60px] shadow-lg mb-10 flex items-center fixed top-0 left-0 w-full z-50'>
@@ -68,6 +79,7 @@ const PostList = ({ user, onLogout }) => {
                     <button onClick={onLogout} className='font-bold pt-[2px] pb-[2px] pr-[20px] pl-[20px]'>Logout</button>
                 </div>
             </div>
+
             <div className='flex flex-col items-center content mt-20'>
                 <h1 className='text-7xl'>Share Your Thoughts</h1>
                 <button
@@ -83,9 +95,19 @@ const PostList = ({ user, onLogout }) => {
                     }} />
                 </Modal>
 
-                <h3 className='text-4xl mt-10'>(?)</h3>
+                {/* Search bar */}
+                <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={handleSearch}
+                    placeholder="Search posts..."
+                    className='bg-[#242424] w-[400px] p-4 border-[#868686] border-b-2 focus:border-[#ffe01b]
+                        transition-color duration-300 mb-4 mt-10 text-base'
+                />
+
+                {/* <h3 className='text-4xl mt-10'>{filteredPosts.length} posts found</h3> */}
                 <ul>
-                    {posts.map(post => (
+                    {filteredPosts.map(post => (
                         <li key={post.id}
                             className='
                             flex flex-col items-center p-10 
@@ -94,7 +116,7 @@ const PostList = ({ user, onLogout }) => {
                             '>
                             <p className='mb-4 w-full text-left'>
                                 <span className='text-base'>Posted by:
-                                    <Link to={`/user/${post.username}/posts`} className='text-base hover:underline ml-1'>
+                                    <Link to={`/user/${post.username}/posts`} className='text-base ml-1'>
                                         {post.username}
                                     </Link>
                                 </span>
@@ -108,7 +130,7 @@ const PostList = ({ user, onLogout }) => {
                             {/* Toggle Comments Button */}
                             <button
                                 onClick={() => toggleComments(post.id)}
-                                className='text-sm font-bold text-blkack self-start'>
+                                className='text-sm font-bold text-black self-start'>
                                 {showComments[post.id] ? 'Hide Comments' : 'Show Comments'}
                             </button>
 
